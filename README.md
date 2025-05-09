@@ -346,3 +346,5 @@ ParamsCopy: 887.50
 ContextSwitch: 1416.14
 ParamsSync: 2029.21
 ```
+
+In Output Buffer test, the execution time of callee logic is also included in `ContextSwitch` and can be manually computed.
