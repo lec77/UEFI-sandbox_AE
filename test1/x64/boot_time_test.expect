@@ -1,0 +1,106 @@
+#!/usr/bin/expect
+
+# Expect timeout in seconds
+set timeout 10
+
+# Variables
+set log_file "debug.log"
+set output_file "results.log"
+set i_start -1
+set i_end 6
+set run_count 10
+
+# Clear the output file at the start
+exec rm -f $output_file
+exec touch $output_file
+
+# Outer loop for i
+for {set i $i_start} {$i <= $i_end} {incr i} {
+    exec echo "Processing bios${i}.bin" >> $output_file
+
+    # To store times for average calculation
+    set time_differences {}
+
+    # Inner loop for multiple runs
+    for {set j 1} {$j <= $run_count} {incr j} {
+        exec echo "  Run #$j" >> $output_file
+
+        # Spawn QEMU process
+        spawn taskset -c 0 qemu-system-x86_64 \
+            -cpu host \
+            -enable-kvm \
+            -m 1G \
+            -drive format=raw,file=grub_linux.img \
+            -drive if=pflash,format=raw,file=./FV/bios${i}.bin \
+            -debugcon file:$log_file \
+            -global isa-debugcon.iobase=0x402 \
+            -net none \
+            -nographic
+
+        # Wait for ExitBootService or timeout
+        expect {
+            "traps*" {
+                # Extract TSC values from the debug log
+                set log_content [exec cat $log_file]
+                regexp {DxeMain_TSC=(\d+)} $log_content match dxe_main_tsc
+                regexp {ExitBootService_TSC=(\d+)} $log_content match exit_boot_tsc
+                
+                if {![info exists dxe_main_tsc] || ![info exists exit_boot_tsc]} {
+                    exec echo "    Missing TSC values in log" >> $output_file
+                    continue
+                }
+
+                # Calculate time difference
+                set time_difference [expr {$exit_boot_tsc - $dxe_main_tsc}]
+                lappend time_differences $time_difference
+                exec echo "    DxeMain TSC: $dxe_main_tsc, ExitBootService TSC: $exit_boot_tsc" >> $output_file
+                exec echo "    Time difference: $time_difference" >> $output_file
+
+                # Force kill QEMU process
+                exec pkill -f qemu-system-x86_64
+                sleep 1
+            }
+            timeout {
+                exec echo "    Timeout waiting for ExitBootService" >> $output_file
+                # Force kill QEMU process
+                exec pkill -f qemu-system-x86_64
+                sleep 1
+            }
+        }
+    }
+
+    # Calculate and log average time difference (excluding min and max values)
+    if {[llength $time_differences] > 2} {
+        # Sort the time differences
+        set sorted_times [lsort -integer $time_differences]
+        
+        # Remove min and max values
+        set trimmed_times [lrange $sorted_times 1 end-1]
+        
+        # Calculate average of remaining values
+        set total_time 0
+        foreach time $trimmed_times {
+            set total_time [expr {$total_time + $time}]
+        }
+        set average_time [expr {$total_time / [llength $trimmed_times]}]
+        
+        # Log both the regular average and the trimmed average
+        #exec echo "  All values: $time_differences" >> $output_file
+        #exec echo "  Values used for average (min/max removed): $trimmed_times" >> $output_file
+        exec echo "  Average time difference for bios${i} (min/max removed): $average_time" >> $output_file
+    } elseif {[llength $time_differences] > 0} {
+        # If we have too few values to remove min/max, calculate regular average
+        set total_time 0
+        foreach time $time_differences {
+            set total_time [expr {$total_time + $time}]
+        }
+        set average_time [expr {$total_time / [llength $time_differences]}]
+        exec echo "  Average time difference for bios${i} (all values): $average_time" >> $output_file
+        exec echo "  Note: Too few samples to remove min/max values" >> $output_file
+    } else {
+        exec echo "  No valid time differences for bios${i}" >> $output_file
+    }
+}
+
+exec echo "All runs completed. Results are in $output_file."
+
