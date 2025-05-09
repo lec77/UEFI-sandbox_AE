@@ -220,7 +220,7 @@ Execute the given bios image.
 
 * On Raspi4
   
-  Replace RPI_EFI.fd in the SD card with test2/aarch64/baseline/RPI_EFI.fd (replace baseline with fat or fat_diskio when testing other cases). Then boot Raspi4 and enter UEFI shell.
+  Replace `RPI_EFI.fd` in the SD card with `test2/aarch64/baseline/RPI_EFI.fd` (replace `baseline` with `fat` or `fat_diskio` when testing other cases). Then boot Raspi4 and enter UEFI shell.
 
   ```bash
   minicom -D /dev/ttyUSB0 -b 115200 -C test2/aarch64/baseline.log
@@ -295,7 +295,9 @@ Execute the given bios image.
 
 * On Raspi4
   
-  Replace RPI_EFI.fd in the SD card with test3/aarch64/RPI_EFI.fd. Then boot Raspi4 and enter UEFI shell.
+  1. Replace `RPI_EFI.fd` in the SD card with `test3/aarch64/RPI_EFI.fd`.
+  2. Copy `test3/aarch64/SandboxC.efi` and `test3/aarch64/SandboxS.efi` into the SD card.
+  3. Boot Raspi4 and enter UEFI shell.
 
 After entering the UEFI shell, run the following command to execute the test:
 
