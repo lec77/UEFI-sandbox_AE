@@ -62,6 +62,8 @@
 
 ## 1 Getting Started Instructions
 
+We provide a pre-configured testing environment for your convenience, please refer to HotCRP for more information.
+
 ### 1.1 Prerequisites
 
 On x86_64 platform:
