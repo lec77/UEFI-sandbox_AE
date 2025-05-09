@@ -161,6 +161,8 @@ The boot performance is only tested on the x86_64 platform as we failed to confi
 
 ### 2.1 Run the test
 
+You need to download `grub_linux.img` ([Link](https://ipads.se.sjtu.edu.cn:1313/seafhttp/f/7101333915ec4461ac0a/?op=view)) and move it under `test1/x64`
+
 ```bash
 cd test1/x64
 
