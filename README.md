@@ -148,6 +148,8 @@ After rebooting, you can enter the UEFI shell by pressing `F1` or `Fn + F1` when
 
 Or you can under the UEFI shell via Boot Manager.
 
+You can press `Ctrl + A` and then `Q` to quit minicom.
+
 ## 2 Boot Performance Test (Test 1)
 
 **Description**: This test is corresponding to Figure 8 in the paper.
@@ -305,7 +307,7 @@ load SandboxS.efi
 load SandboxC.efi
 ```
 
-The output is saved in `debug.log` and you can exit qemu by pressing `Ctrl+A` and then `X`.
+The output is saved in `debug.log` and you can exit qemu by pressing `Ctrl + A` and then `X`.
 
 ### 4.2 Analyze the result of micro-test.
 
