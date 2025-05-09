@@ -108,7 +108,7 @@ qemu-system-x86_64 -cpu host -enable-kvm \
 To use the custom BIOS image, replace the `RPI_EFI.fd` with provided custom binary. Initiate Minicom and multiplex the stdout log.
 
 ```bash
-minicom -D /dev/ttyUSBX -C debug.log
+minicom -D /dev/ttyUSBX -C output.log
 ```
 
 **Option2: Using the provided Raspberry Pi 4**
@@ -119,13 +119,11 @@ The Raspberry Pi can be accessed using the following command:
 
 ```bash
 # After ssh into the machine for AE
-tmux attach -t rpi
+minicom -D /dev/ttyUSB0 -b 115200 -C output.log
 ```
 
-Then you can interact with the UEFI shell via minicom which runs in tmux session.
-
 ```shell
-# In the UEFI shell
+# In UEFI shell
 fs0:
 
 ls
@@ -133,11 +131,10 @@ ls
 
 You should see the files in the root directory of the SD card.
 
-Minicom log is saved to `~/raspi.log`. You may need to manually extract the segment corresponding to the current test session for analysis.
-
 You can reboot the Raspberry Pi by running the following command in the UEFI shell:
 
-```bash
+```shell
+# In UEFI shell
 reset
 ```
 
@@ -197,13 +194,11 @@ bios6: +143379182 (1.4452%)
 
 In this test, the baseline is defined as the BIOS image compiled with EDK II that does not run the Sandbox Manager. The test revolves around the efficiency of FAT operations on a file. Starting from this configuration, we incrementally move FAT and DiskIO into the sandbox mode from bios_baseline.bin (Baseline), bios_fat.bin (FAT) to bios_fat_diskio.bin (FAT + DiskIO). Each test with different filesize is conducted under 16 iterations. 
 
-
-
 Note that the TSC on x86_64 and aarch64 is sometimes skewed (the timestamp readed after the operation is smaller than the timestamp before the operation) , it's necessary to remove theses abnormalities (larger than 1e9 cycles) from the data points.
 
 **Test Goal**: This test demonstrate that the overhead introduced by μEFI in module execution is small.
-  *  On x86_64, the overhead of end-to-end test is about 0.35% and 0.78%, less than 1%. On aarch64, the overhead of end-to-end test is about 4.89% and 7.75%.
-  * The overheads of Open/Delete/Flush operations primarily reflect the natural fluctuations in the interface execution times, which are less than 5% compared to the baseline.
+  * End-to-end test: On x86_64, the overhead of running two relevant modules in sandboxes is less than 1.5%. On aarch64, the overhead is less than 10%.
+  * Interface-level test: The overhead of FAT interfaces when modules are executed in sandboxes are small compared to the original execution time. The overheads of Open/Delete/Flush operations primarily reflect the natural fluctuations in the interface execution times, which are less than 5% compared to the baseline.
 
 ### 3.1  Run the test
 
